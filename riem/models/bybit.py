@@ -1,10 +1,4 @@
-"""
 
-[TODO] (status: unsolved | solved | done | canceled):
-- [+] 情報を一箇所に集めたいので、pathを.coreのPATHSから取得するようにする(unsolved)
-- [+] core.Exchangeのメソッドの返り値の型（RequestContents）に対応する。(solved)
-
-"""
 
 from .core import (
     ENDPOINTS,

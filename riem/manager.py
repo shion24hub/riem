@@ -1,16 +1,3 @@
-"""
-
-require:
-- pybotters 1.0.0 or higher
-
-[TODO] (status: unsolved | solved | done | canceled):
-- [+] 例外処理を追加する。(unsolved)
-- [+] インプットの順序を保証する。(canceled)
-- [+] core.Exchangeのメソッドの返り値の型（RequestContents）に対応する。(solved)
-- [+] Manager.request内で使われる変数名を短く改良する。(unsolved)
-- [+] Manager.request内の処理フローをdocstringにまとめておく。現状かなり汚いように思える。メソッドに切り出しも検討(unsolved)
-
-"""
 
 from __future__ import annotations
 

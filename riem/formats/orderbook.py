@@ -1,19 +1,4 @@
 
-"""
-対応取引所
-- GMO
-- Bitbank
-- Bybit
-- Coincheck
-
-[TODO]
-OrderbookResponseにInformationがいらない可能性（ていうか多分いらない）
--> HTTPResponseContentsにInformationが入っているので、重複している。
-(解決: 2023/1/17)
-
-"""
-
-
 from __future__ import annotations
 
 import dataclasses
