@@ -47,18 +47,18 @@ class Exchange(metaclass=ABCMeta):
     def post_order(self) -> RequestContents:
         pass
     
-    # # Exchangeを継承したクラスは、以下のメンバ変数を持つ必要がある。
-    # @property
-    # @abstractmethod
-    # def get_exchange_name(self) -> str:
-    #     pass
+    # Exchangeを継承したクラスは、以下のメンバ変数を持つ必要がある。
+    @property
+    @abstractmethod
+    def get_exchange_name(self) -> str:
+        pass
 
-    # @property
-    # @abstractmethod
-    # def get_public_endpoint(self) -> str:
-    #     pass
+    @property
+    @abstractmethod
+    def get_public_endpoint(self) -> str:
+        pass
 
-    # @property
-    # @abstractmethod
-    # def get_private_endpoint(self) -> str:
-    #     pass
+    @property
+    @abstractmethod
+    def get_private_endpoint(self) -> str:
+        pass
