@@ -1,5 +1,4 @@
 
-from .manager import Manager
 from .agent import Agent
 from .response import RequestResponse, RequestResponses
 
