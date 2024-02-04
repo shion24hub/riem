@@ -4,36 +4,6 @@ import dataclasses
 from typing import Any
 
 
-ENDPOINTS = {
-    'gmocoin': {
-        'public': 'https://api.coin.z.com/public',
-        'private': 'https://api.coin.z.com/private',
-    },
-    'bitbank': {
-        'public': 'https://public.bitbank.cc',
-        'private': 'https://api.bitbank.cc',
-    },
-    'bybit': {
-        'public': 'https://api.bybit.com',
-        'private': 'https://api.bybit.com',
-    },
-}
-
-PATHS = {
-    'gmocoin': {
-        'orderbooks': '/v1/orderbooks',
-        'assets': '/v1/account/assets',
-        'order': '/v1/order',
-    },
-    'bitbank': {
-        'orderbooks': '/.*/depth', # ワイルドカード部分はsymbol
-    },
-    'bybit': {
-        'orderbooks': '/v5/market/orderbook',
-    }
-}
-
-
 @dataclasses.dataclass
 class HTTPRequestContents:
     url: str

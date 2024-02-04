@@ -1,8 +1,6 @@
 
 
 from .core import (
-    ENDPOINTS,
-    PATHS,
     Exchange,
     HTTPRequestContents,
     ExtraInformation,
@@ -20,11 +18,12 @@ class Bitbank(Exchange):
 
     """
 
+    exchange_name: str = 'bitbank'
+    public_endpoint: str = 'https://public.bitbank.cc'
+    private_endpoint: str = 'https://api.bitbank.cc'
+
     def __init__(self) -> None:
-        
-        self.exchange_name = 'bitbank'
-        self.public_endpoint = ENDPOINTS['bitbank']['public']
-        self.private_endpoint = ENDPOINTS['bitbank']['private']
+        pass
 
     def get_orderbooks(self, *, symbol: str, **kwargs) -> RequestContents:
 

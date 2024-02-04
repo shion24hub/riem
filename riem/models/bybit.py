@@ -1,8 +1,6 @@
 
 
 from .core import (
-    ENDPOINTS,
-    PATHS,
     Exchange,
     HTTPRequestContents,
     ExtraInformation,
@@ -19,11 +17,12 @@ class Bybit(Exchange):
 
     """
 
+    exchange_name: str = 'bybit'
+    public_endpoint: str = 'https://api.bybit.com'
+    private_endpoint: str = 'https://api.bybit.com'
+
     def __init__(self) -> None:
-        
-        self.exchange_name = 'bybit'
-        self.public_endpoint = ENDPOINTS[self.exchange_name]['public']
-        self.private_endpoint = ENDPOINTS[self.exchange_name]['private']
+        pass
     
     def get_orderbooks(self, *, symbol: str, category: str, **kwargs) -> RequestContents:
         """
