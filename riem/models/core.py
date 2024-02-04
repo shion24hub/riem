@@ -35,14 +35,17 @@ class RequestContents:
 
 class Exchange(metaclass=ABCMeta):
     
+    @classmethod
     @abstractmethod
     def get_orderbooks(self) -> RequestContents:
         pass
-
+    
+    @classmethod
     @abstractmethod
     def get_assets(self) -> RequestContents:
         pass
 
+    @classmethod
     @abstractmethod
     def post_order(self) -> RequestContents:
         pass

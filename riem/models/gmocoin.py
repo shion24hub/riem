@@ -26,9 +26,10 @@ class Gmocoin(Exchange):
     def __init__(self) -> None:
         pass
     
-    def get_orderbooks(self, *, symbol: str, **kwargs) -> RequestContents:
+    @classmethod
+    def get_orderbooks(cls, *, symbol: str, **kwargs) -> RequestContents:
         
-        url = f'{self.public_endpoint}/v1/orderbooks'
+        url = f'{cls.public_endpoint}/v1/orderbooks'
         method = 'GET'
         params = {'symbol': symbol}
 
@@ -39,7 +40,7 @@ class Gmocoin(Exchange):
                 params=params,
             ),
             extra_information=ExtraInformation(
-                exchange_name=self.exchange_name,
+                exchange_name=cls.exchange_name,
                 data_type='orderbooks',
                 arguments={'symbol': symbol},
             )

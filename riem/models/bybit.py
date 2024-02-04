@@ -24,6 +24,7 @@ class Bybit(Exchange):
     def __init__(self) -> None:
         pass
     
+    @classmethod
     def get_orderbooks(self, *, symbol: str, category: str, **kwargs) -> RequestContents:
         """
         returns HTTPRequestContents.
@@ -50,6 +51,7 @@ class Bybit(Exchange):
             )
         )
     
+    @classmethod
     def get_assets(self, *, account_type: str, coin: str | None = None, **kwargs) -> HTTPRequestContents:
         """ get wallet balance
 
@@ -83,6 +85,7 @@ class Bybit(Exchange):
             )
         )
 
+    @classmethod
     def post_order(
         self,
         *,

@@ -24,7 +24,8 @@ class Bitbank(Exchange):
 
     def __init__(self) -> None:
         pass
-
+    
+    @classmethod
     def get_orderbooks(self, *, symbol: str, **kwargs) -> RequestContents:
 
         url = f'{self.public_endpoint}/{symbol}/depth'
@@ -42,6 +43,7 @@ class Bitbank(Exchange):
             )
         )
     
+    @classmethod
     def get_assets(self, **kwargs) -> RequestContents:
         
         url = f'{self.private_endpoint}/v1/user/assets'
@@ -59,6 +61,7 @@ class Bitbank(Exchange):
             )
         )
 
+    @classmethod
     def post_order(
             self,
             *,
