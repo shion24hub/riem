@@ -39,7 +39,7 @@ class Agent:
     def set_formatter(self, data_type: str, formatter: Formatter) -> None:
         self.formatters[data_type] = formatter
     
-    async def request(self, requests: list[RequestContents]) -> RequestResponses:
+    async def request(self, *requests: RequestContents) -> RequestResponses:
         """async request
 
         Async request to exchanges.
@@ -47,6 +47,8 @@ class Agent:
         - note: responses are not guaranteed to be in the same order as requests.
 
         """
+
+        requests = list(requests)
 
         tasks = []
         url_info_map: dict[str, ExtraInformation] = {}
