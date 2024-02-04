@@ -37,14 +37,15 @@ class AssetResponse:
                 total += float(asset.amount) * rates[asset.name]
         return total
     
-    def rename(self, name_map: dict[str, str]) -> AssetResponse:
-        
+    def rename(self, asset: str, to: str) -> AssetResponse:
+
         renamed_assets = []
-        for asset in self.assets:
-            if asset.name in name_map:
-                renamed_assets.append(Asset(name=name_map[asset.name], amount=asset.amount))
+        for a in self.assets:
+            if a.name == asset:
+                renamed_assets.append(Asset(name=to, amount=a.amount))
             else:
-                renamed_assets.append(asset)
+                renamed_assets.append(a)
+        
         return AssetResponse(assets=renamed_assets)
     
     def filter(self, names: list[str]) -> AssetResponse:
@@ -63,7 +64,12 @@ class AssetResponse:
 class AssetFormatter(Formatter):
 
     def __init__(self, name_map: dict[str, list[str]] | None = None) -> None:
-        self.name_map = name_map
+        
+        self.name_map = {}
+        for k, vs in name_map.items():
+            for v in vs:
+                self.name_map[v] = k
+            
 
     def handle_by_exchange(self, exchange_name: str, raw_data: Any) -> AssetResponse | None:
 
@@ -81,7 +87,16 @@ class AssetFormatter(Formatter):
         assets = []
         try:
             for d in raw_data['data']:
-                assets.append(Asset(name=d['symbol'], amount=d['amount']))
+                
+                name = d['symbol']
+                amount = d['amount']
+                
+                # name_mapに指定があれば変換
+                if name in self.name_map:
+                    name = self.name_map[name]
+
+                assets.append(Asset(name=name, amount=amount))
+
         except KeyError:
             return None
             
@@ -92,7 +107,16 @@ class AssetFormatter(Formatter):
         assets = []
         try:
             for d in raw_data['data']['assets']:
-                assets.append(Asset(name=d['asset'], amount=d['onhand_amount']))
+                
+                name = d['asset']
+                amount = d['onhand_amount']
+
+                # name_mapに指定があれば変換
+                if name in self.name_map:
+                    name = self.name_map[name]
+                    
+                assets.append(Asset(name=name, amount=amount))
+
         except KeyError:
             return None
         
@@ -103,7 +127,16 @@ class AssetFormatter(Formatter):
         assets = []
         try:
             for d in raw_data['result']['list'][0]['coin']:
-                assets.append(Asset(name=d['coin'], amount=d['equity']))
+                
+                name = d['coin']
+                amount = d['equity']
+
+                # name_mapに指定があれば変換
+                if name in self.name_map:
+                    name = self.name_map[name]
+
+                assets.append(Asset(name=name, amount=amount))
+
         except KeyError:
             return None
             
