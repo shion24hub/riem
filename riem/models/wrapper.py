@@ -1,14 +1,10 @@
 
-
 from .core import Exchange, RequestContents
-from .gmocoin import Gmocoin
-from .bitbank import Bitbank
-from .bybit import Bybit
 
 
 class ModelWrapper:
 
-    def __init__(self, *models) -> None:
+    def __init__(self, *models: Exchange) -> None:
         
         self.models: dict[str, Exchange] = {}
         for model in models:
