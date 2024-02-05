@@ -3,6 +3,7 @@ from .agent import Agent
 from .response import RequestResponse, RequestResponses
 
 from .models.core import Exchange, RequestContents
+from .models.wrapper import ModelWrapper
 from .models.gmocoin import Gmocoin
 from .models.bitbank import Bitbank
 from .models.bybit import Bybit
