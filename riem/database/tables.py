@@ -1,8 +1,10 @@
 
+from __future__ import annotations
+
 from datetime import datetime
 
 from sqlalchemy.schema import Column
-from sqlalchemy.types import Integer, String, Boolean, DateTime
+from sqlalchemy.types import Integer, String, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.schema import ForeignKey
 
@@ -18,24 +20,38 @@ class OrderbookTable(Base):
     id = Column(Integer, primary_key=True)
     exchange_name = Column(String)
     symbol = Column(String)
-    book = relationship('BookTable', backref='orderbook')
+    asks = relationship('AskTable', backref='orderbook')
+    bids = relationship('BidTable', backref='orderbook')
     created_on = Column(DateTime(), default=datetime.now)
 
     def __repr__(self) -> str:
-        return 'Orderbook(exchange_name={}, symbol={}, book={})'.format(self.exchange_name, self.symbol, self.book)
+        return 'OrderbookTable(exchange_name={}, symbol={}, ask={}, bid={})'.format(
+            self.exchange_name, self.symbol, self.asks, self.bids
+        )
 
 
-class BookTable(Base):
-    __tablename__ = 'book'
+class AskTable(Base):
+    __tablename__ = 'ask'
 
     id = Column(Integer, primary_key=True)
     ob_id = Column(Integer, ForeignKey('orderbook.id'))
-    isAsk = Column(Boolean)
     price = Column(String)
     size = Column(String)
 
     def __repr__(self) -> str:
-        return 'Book(isAsk={}, price={}, size={})'.format(self.isAsk, self.price, self.size)
+        return 'AskTable(price={}, size={})'.format(self.price, self.size)
+
+
+class BidTable(Base):
+    __tablename__ = 'bid'
+
+    id = Column(Integer, primary_key=True)
+    ob_id = Column(Integer, ForeignKey('orderbook.id'))
+    price = Column(String)
+    size = Column(String)
+
+    def __repr__(self) -> str:
+        return 'BidTable(price={}, size={})'.format(self.price, self.size)
 
 
 # Asset
@@ -49,7 +65,7 @@ class AssetTable(Base):
     created_on = Column(DateTime(), default=datetime.now)
 
     def __repr__(self) -> str:
-        return 'Asset(exchange_name={}, asset={})'.format(self.exchange_name, self.asset)
+        return 'AssetTable(exchange_name={}, asset={})'.format(self.exchange_name, self.asset)
 
 
 class AssetDetailTable(Base):
@@ -61,6 +77,6 @@ class AssetDetailTable(Base):
     amount = Column(String)
 
     def __repr__(self) -> str:
-        return 'AssetDetail(name={}, amount={})'.format(self.name, self.amount)
+        return 'AssetDetailTable(name={}, amount={})'.format(self.name, self.amount)
 
 
