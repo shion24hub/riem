@@ -3,6 +3,7 @@ from .client import Client
 from .response import RequestResponse, ResponseProxy
 from .fmt import Formatter
 from .dbi import DatabaseInterface
+from .mi import ModelInterface
 
 # models
 from .models.core import Exchange
