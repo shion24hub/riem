@@ -1,7 +1,7 @@
+
 from __future__ import annotations
 
 import asyncio
-
 import pybotters
 
 from .response import RequestResponse, ResponseProxy
@@ -20,12 +20,12 @@ class Client(pybotters.Client):
     
     """
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     async def paralell_fetch(
         self, 
-        *requests: RequestContents # listで受け取ったほうがいいかも
+        *requests: RequestContents
     ) -> ResponseProxy:
         """ paralell_fetch
 
