@@ -1,6 +1,7 @@
 test.py
 archives/
 test_dbs/
+test_utils/
 resp.py
 
 # Byte-compiled / optimized / DLL files
