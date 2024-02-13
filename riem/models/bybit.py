@@ -25,12 +25,12 @@ class Bybit(Exchange):
         pass
     
     @classmethod
-    def get_orderbooks(self, *, symbol: str, category: str, **kwargs) -> RequestContents:
+    def get_orderbooks(cls, *, symbol: str, category: str, **kwargs) -> RequestContents:
         """
         returns HTTPRequestContents.
         """
         
-        url = f'{self.public_endpoint}/v5/market/orderbook'
+        url = f'{cls.public_endpoint}/v5/market/orderbook'
         method = 'GET'
         params = {
             'symbol': symbol,
@@ -45,14 +45,14 @@ class Bybit(Exchange):
                 params=params,
             ),
             extra_information=ExtraInformation(
-                exchange_name=self.exchange_name,
+                exchange_name=cls.exchange_name,
                 data_type='orderbooks',
                 arguments={'symbol': symbol, 'category': category},
             )
         )
     
     @classmethod
-    def get_assets(self, *, account_type: str, coin: str | None = None, **kwargs) -> HTTPRequestContents:
+    def get_assets(cls, *, account_type: str, coin: str | None = None, **kwargs) -> HTTPRequestContents:
         """ get wallet balance
 
         Args:
@@ -66,7 +66,7 @@ class Bybit(Exchange):
 
         """
         
-        url = f'{self.private_endpoint}/v5/account/wallet-balance'
+        url = f'{cls.private_endpoint}/v5/account/wallet-balance'
         method = 'GET'
         params = {
             'accountType': account_type
@@ -79,7 +79,7 @@ class Bybit(Exchange):
                 params=params,
             ),
             extra_information=ExtraInformation(
-                exchange_name=self.exchange_name,
+                exchange_name=cls.exchange_name,
                 data_type='assets',
                 arguments={},
             )
@@ -87,7 +87,7 @@ class Bybit(Exchange):
 
     @classmethod
     def post_order(
-        self,
+        cls,
         *,
         category: str,
         symbol: str,
@@ -162,7 +162,7 @@ class Bybit(Exchange):
 
         """
 
-        url = f'{self.private_endpoint}/v5/order/create'
+        url = f'{cls.private_endpoint}/v5/order/create'
         method = 'POST'
         data = {
             'category': category,
@@ -253,7 +253,7 @@ class Bybit(Exchange):
                 data=data,
             ),
             extra_information=ExtraInformation(
-                exchange_name=self.exchange_name,
+                exchange_name=cls.exchange_name,
                 data_type='orders',
                 arguments={
                     'category': category,

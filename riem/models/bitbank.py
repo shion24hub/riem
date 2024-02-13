@@ -26,9 +26,9 @@ class Bitbank(Exchange):
         pass
     
     @classmethod
-    def get_orderbooks(self, *, symbol: str, **kwargs) -> RequestContents:
+    def get_orderbooks(cls, *, symbol: str, **kwargs) -> RequestContents:
 
-        url = f'{self.public_endpoint}/{symbol}/depth'
+        url = f'{cls.public_endpoint}/{symbol}/depth'
         method = 'GET'
 
         return RequestContents(
@@ -37,16 +37,16 @@ class Bitbank(Exchange):
                 method=method,
             ),
             extra_information=ExtraInformation(
-                exchange_name=self.exchange_name,
+                exchange_name=cls.exchange_name,
                 data_type='orderbooks',
                 arguments={'symbol': symbol},
             )
         )
     
     @classmethod
-    def get_assets(self, **kwargs) -> RequestContents:
+    def get_assets(cls, **kwargs) -> RequestContents:
         
-        url = f'{self.private_endpoint}/v1/user/assets'
+        url = f'{cls.private_endpoint}/v1/user/assets'
         method = 'GET'
 
         return RequestContents(
@@ -55,7 +55,7 @@ class Bitbank(Exchange):
                 method=method,
             ),
             extra_information=ExtraInformation(
-                exchange_name=self.exchange_name,
+                exchange_name=cls.exchange_name,
                 data_type='assets',
                 arguments={},
             )
@@ -63,7 +63,7 @@ class Bitbank(Exchange):
 
     @classmethod
     def post_order(
-            self,
+            cls,
             *,
             pair: str,
             amount: str,
@@ -93,7 +93,7 @@ class Bitbank(Exchange):
         
         """
 
-        url = f'{self.private_endpoint}/v1/user/spot/order'
+        url = f'{cls.private_endpoint}/v1/user/spot/order'
         method = 'POST'
         data = {
             'pair': pair,
@@ -121,7 +121,7 @@ class Bitbank(Exchange):
                 data=data,
             ),
             extra_information=ExtraInformation(
-                exchange_name=self.exchange_name,
+                exchange_name=cls.exchange_name,
                 data_type='orders',
                 arguments={
                     'pair': pair, 

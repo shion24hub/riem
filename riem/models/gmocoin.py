@@ -46,9 +46,10 @@ class Gmocoin(Exchange):
             )
         )
     
-    def get_assets(self, **kwargs) -> RequestContents:
+    @classmethod
+    def get_assets(cls, **kwargs) -> RequestContents:
         
-        url = f'{self.private_endpoint}/v1/account/assets'
+        url = f'{cls.private_endpoint}/v1/account/assets'
         method = 'GET'
 
         return RequestContents(
@@ -57,12 +58,13 @@ class Gmocoin(Exchange):
                 method=method,
             ),
             extra_information=ExtraInformation(
-                exchange_name=self.exchange_name,
+                exchange_name=cls.exchange_name,
                 data_type='assets',
                 arguments={},
             )
         )
 
+    @classmethod
     def post_order(
             self,
             *,
