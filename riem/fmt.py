@@ -21,10 +21,15 @@ class Formatter:
         for i, r in enumerate(responses):
 
             # [TODO]: 保守性にめちゃくちゃな問題がある気がする
-            fd = getattr(
-                self.conv_map[r.data_type],
-                f'format_from_{r.exchange_name}',
-            )(r.raw_data)
+            # fd = getattr(
+            #     self.conv_map[r.data_type],
+            #     f'format_from_{r.exchange_name}',
+            # )(r.raw_data)
+
+            fd = self.conv_map[r.data_type].handle(
+                exchange_name=r.exchange_name,
+                raw_data=r.raw_data
+            )
 
             cresps[i].formatted_data = fd
         

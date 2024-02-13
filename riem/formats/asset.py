@@ -9,6 +9,19 @@ class AssetConverter(Converter):
     def __init__(self) -> None:
         self.data_type = 'assets'
 
+    def handle(self, exchange_name: str, raw_data: Any) -> Asset | None:
+            
+        if exchange_name == 'gmocoin':
+            return self.format_from_gmocoin(raw_data)
+        
+        if exchange_name == 'bitbank':
+            return self.format_from_bitbank(raw_data)
+        
+        if exchange_name == 'bybit':
+            return self.format_from_bybit(raw_data)
+        
+        return None
+
     def format_from_gmocoin(self, raw_data: Any) -> Asset | None:
 
         asset_detail = {}
