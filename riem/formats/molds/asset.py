@@ -7,4 +7,4 @@ import dataclasses
 @dataclasses.dataclass
 class Asset:
     
-    assets: dict[str, float]
+    asset_detail: dict[str, float]

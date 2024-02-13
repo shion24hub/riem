@@ -2,8 +2,14 @@
 from .models.core import ExtraInformation, RequestContents
 from .response import RequestResponse, ResponseProxy
 from .formats.molds.orderbook import Orderbook
+from .formats.molds.asset import Asset
 from .database.database import Database
-from .database.tables import OrderbookTable, BookTable
+from .database.tables import (
+    OrderbookTable,
+    BookTable,
+    AssetTable,
+    AssetDetailTable,
+)
 
 
 class DatabaseInterface:
@@ -34,6 +40,18 @@ class DatabaseInterface:
             symbol=r.arguments['symbol'],
             book=asks + bids
         )
+
+    def create_assets(self, r: RequestResponse):
+        
+        fd: Asset = r.formatted_data
+
+        details = [AssetDetailTable(name=k, amount=v) for k, v in fd.asset_detail.items()]
+
+        return AssetTable(
+            exchange_name=r.exchange_name,
+            asset=details
+        )
+
     
     def read(self, *requests: RequestContents, is_desc=True, limit: int = 1) -> ResponseProxy:
         """ read

@@ -11,48 +11,48 @@ class AssetConverter(Converter):
 
     def format_from_gmocoin(self, raw_data: Any) -> Asset | None:
 
-        assets = {}
+        asset_detail = {}
         try:
             for d in raw_data['data']:
                 name = d['symbol']
                 amount = d['amount']
 
-                assets[name] = amount
+                asset_detail[name] = amount
 
         except KeyError:
             return None
         
-        return Asset(assets=assets)
+        return Asset(asset_detail=asset_detail)
     
     def format_from_bitbank(self, raw_data: Any) -> Asset | None:
 
-        assets = {}
+        asset_detail = {}
         try:
             for d in raw_data['data']['assets']:
                 name = d['asset']
                 amount = d['onhand_amount']
 
-                assets[name] = amount
+                asset_detail[name] = amount
 
         except KeyError:
             return None
         
-        return Asset(assets=assets)
+        return Asset(asset_detail=asset_detail)
     
     def format_from_bybit(self, raw_data: Any) -> Asset | None:
         
-        assets = {}
+        asset_detail = {}
         try:
             for d in raw_data['result']['list'][0]['coin']:
                 name = d['coin']
                 amount = d['equity']
 
-                assets[name] = amount
+                asset_detail[name] = amount
 
         except KeyError:
             return None
         
-        return Asset(assets=assets)
+        return Asset(asset_detail=asset_detail)
     
     @property
     def get_data_type(self) -> str:
