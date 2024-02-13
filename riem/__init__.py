@@ -22,5 +22,3 @@ from .formats.asset import AssetConverter
 
 # database
 from .database.database import Database
-
-from .database.tables import OrderbookTable, BookTable

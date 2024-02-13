@@ -1,4 +1,6 @@
 
+from typing import Any, Callable
+
 from .models.core import ExtraInformation, RequestContents
 from .response import RequestResponse, ResponseProxy
 from .formats.molds.orderbook import Orderbook
@@ -6,13 +8,46 @@ from .formats.molds.asset import Asset
 from .database.database import Database
 from .database.tables import (
     OrderbookTable,
-    BookTable,
+    AskTable,
+    BidTable,
     AssetTable,
     AssetDetailTable,
 )
 
 
+def create_orderbooks(r: RequestResponse):
+
+    fd: Orderbook = r.formatted_data
+
+    asks = [AskTable(price=p, size=s) for p, s in fd.asks.book]
+    bids = [BidTable(price=p, size=s) for p, s in fd.bids.book]
+
+    return OrderbookTable(
+        exchange_name=r.exchange_name,
+        symbol=r.arguments['symbol'],
+        asks=asks,
+        bids=bids,
+    )
+
+
+def create_assets(r: RequestResponse):
+        
+    fd: Asset = r.formatted_data
+
+    details = [AssetDetailTable(name=k, amount=v) for k, v in fd.asset_detail.items()]
+
+    return AssetTable(
+        exchange_name=r.exchange_name,
+        asset=details
+    )
+
+
 class DatabaseInterface:
+
+    create_funcs: dict[str, Callable[[RequestResponse], Any]] = {
+        'orderbooks': create_orderbooks,
+        'assets': create_assets,
+    }
 
     def __init__(self, database: Database) -> None:
         
@@ -22,35 +57,11 @@ class DatabaseInterface:
 
         records = []
         for r in resps:
-            records.append(getattr(self, f'create_{r.data_type}')(r))
+            records.append(self.create_funcs[r.data_type](r))
         
         with self.database.session as session:
             session.add_all(records)
             session.commit()
-
-    def create_orderbooks(self, r: RequestResponse):
-
-        fd: Orderbook = r.formatted_data
-
-        asks = [BookTable(isAsk=True, price=p, size=s) for p, s in fd.asks.book]
-        bids = [BookTable(isAsk=False, price=p, size=s) for p, s in fd.bids.book]
-
-        return OrderbookTable(
-            exchange_name=r.exchange_name,
-            symbol=r.arguments['symbol'],
-            book=asks + bids
-        )
-
-    def create_assets(self, r: RequestResponse):
-        
-        fd: Asset = r.formatted_data
-
-        details = [AssetDetailTable(name=k, amount=v) for k, v in fd.asset_detail.items()]
-
-        return AssetTable(
-            exchange_name=r.exchange_name,
-            asset=details
-        )
 
     
     def read(self, *requests: RequestContents, is_desc=True, limit: int = 1) -> ResponseProxy:
