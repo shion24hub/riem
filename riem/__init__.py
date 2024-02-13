@@ -13,8 +13,11 @@ from .models.bybit import Bybit
 # formats
 from .formats.converter import Converter
 
-from .formats.orderbook import OrderbookConverter
 from .formats.molds.orderbook import Orderbook, Book
+from .formats.orderbook import OrderbookConverter
+
+from .formats.molds.asset import Asset
+from .formats.nasset import AssetConverter
 
 # database
 from .database.database import Database
