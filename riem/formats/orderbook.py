@@ -48,7 +48,22 @@ class OrderbookConverter(Converter):
         )
     
     def format_from_bybit(self, raw_data: Any) -> Orderbook:
-        pass
+        
+        try:
+            asks = raw_data['result']['a'][:self.length]
+            bids = raw_data['result']['b'][:self.length]
+        except KeyError:
+            return None
+        
+        ask_book, bid_book = [], []
+        for i in range(self.length):
+            ask_book.append((asks[i][0], asks[i][1]))
+            bid_book.append((bids[i][0], bids[i][1]))
+        
+        return Orderbook(
+            asks=Book(book=ask_book),
+            bids=Book(book=bid_book)
+        )
 
     @property
     def get_data_type(self) -> str:
