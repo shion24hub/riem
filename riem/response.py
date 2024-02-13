@@ -16,7 +16,15 @@ class RequestResponse:
 
 
 @dataclasses.dataclass
-class RequestResponses:
+class ResponseProxy:
+    """ResponseProxy
+    
+    exchange_nameとdata_typeとargumentsから、一意のidを取得し、
+    そのキーを保持する。
+
+    値を足し算できるので、そのままストアとして使える。
+    
+    """
 
     responses: list[RequestResponse]
 
@@ -25,6 +33,15 @@ class RequestResponses:
     
     def __getitem__(self, index: int) -> RequestResponse:
         return self.responses[index]
+    
+    def __iter__(self):
+        return iter(self.responses)
+    
+    def __bool__(self) -> bool:
+        return bool(self.responses)
+    
+    def __add__(self, other: ResponseProxy) -> ResponseProxy:
+        return ResponseProxy(responses=self.responses + other.responses)
     
     def __find(
             self,
@@ -90,7 +107,7 @@ class RequestResponses:
         data_type: str | list[str] | None = None,
         arguments: dict[str, Any] | list[dict[str, Any]] | None = None,
         only_formatted: bool = False,
-    ) -> RequestResponses:
+    ) -> ResponseProxy:
         """ find
 
         検索条件に合致するRequestResponseを探し、それらをRequestResponsesとしてまとめて返す。
@@ -130,7 +147,7 @@ class RequestResponses:
             only_formatted=only_formatted,
         )
 
-        return RequestResponses(responses=[response for _, response in ans])
+        return ResponseProxy(responses=[response for _, response in ans])
     
     def arg_find(
         self,
@@ -254,12 +271,12 @@ class RequestResponses:
     def replace(
             self,
             response: RequestResponse
-        ) -> RequestResponses:
+        ) -> ResponseProxy:
         """
         add later.
         """
 
-        copied_self: RequestResponses = copy.deepcopy(self)
+        copied_self: ResponseProxy = copy.deepcopy(self)
 
         index = self.arg_identify(
             exchange_name=response.exchange_name,
@@ -280,7 +297,7 @@ class RequestResponses:
     def map_to_responses(
             self, 
             f: Callable[[RequestResponse], RequestResponse],
-        ) -> RequestResponses:
+        ) -> ResponseProxy:
         """
         map関数。自身の持っているresponsesに対して、引数に与えられた関数fを適用する。
         関数fは、RequestResponseを引数に取り、RequestResponseを返すように設計しなければならない。
@@ -290,11 +307,11 @@ class RequestResponses:
         - 引数を指定したい場合は、apply_to_responsesメソッドを使う。
         """
 
-        copied_self: RequestResponses = copy.deepcopy(self)
+        copied_self: ResponseProxy = copy.deepcopy(self)
         
         for response in self.responses:
             res: RequestResponse = f(response)
-            copied_self: RequestResponses = copied_self.replace(res)
+            copied_self: ResponseProxy = copied_self.replace(res)
 
         return copied_self
 
@@ -302,7 +319,7 @@ class RequestResponses:
             self, 
             f: Callable[[RequestResponse, dict[str, Any]], RequestResponse],
             arguments: dict[str, Any],
-        ) -> RequestResponses:
+        ) -> ResponseProxy:
         """
         apply関数。自身の持っているresponsesに対して、引数に与えられた関数fを適用する。
         関数fは、RequestResponseとdict[str, Any]を引数に取り、RequestResponseを返すように設計しなければならない。
@@ -313,11 +330,11 @@ class RequestResponses:
         - 引数を指定しない場合は、map_to_responsesメソッドを使う。
         """
 
-        copied_self: RequestResponses = copy.deepcopy(self)
+        copied_self: ResponseProxy = copy.deepcopy(self)
 
         for response in self.responses:
             res: RequestResponse = f(response, arguments)
-            copied_self: RequestResponses = copied_self.replace(res)
+            copied_self: ResponseProxy = copied_self.replace(res)
         
         return copied_self
     
