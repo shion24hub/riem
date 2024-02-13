@@ -1,6 +1,7 @@
 test.py
 archives/
 test_dbs/
+resp.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
