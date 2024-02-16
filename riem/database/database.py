@@ -18,9 +18,9 @@ class BaseSession(BaseEngine):
         self.session = session()
 
 
-class Database:    
+class Database:
     def __init__(self, url: str) -> None:
-        
+
         self.engine = BaseEngine(url).engine
         Base.metadata.create_all(self.engine)
 
