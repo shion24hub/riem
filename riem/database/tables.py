@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from typing import Any
 from datetime import datetime
+from typing import Any
 
-from sqlalchemy.schema import Column
-from sqlalchemy.types import Integer, String, DateTime
 from sqlalchemy.orm import relationship
+from sqlalchemy.schema import Column
 from sqlalchemy.sql.schema import ForeignKey
+from sqlalchemy.types import DateTime, Integer, String
 
 from .base import Base
-
 
 # Orderbook
 
@@ -33,12 +32,12 @@ class OrderbookTable(Base):
         )
 
         return "OrderbookTable({})".format(attrs)
-    
+
     @property
     def for_fmt(self) -> dict[str, Any]:
         return {
-            'asks': [(a.price, a.size) for a in self.asks],
-            'bids': [(b.price, b.size) for b in self.bids],
+            "asks": [(a.price, a.size) for a in self.asks],
+            "bids": [(b.price, b.size) for b in self.bids],
         }
 
 
@@ -89,9 +88,12 @@ class AssetTable(Base):
 
     @property
     def for_fmt(self) -> dict[str, Any]:
-        return {
-            'asset_detail': {a.name: a.amount for a in self.asset},
-        }
+
+        ret = {}
+        for a in self.asset:
+            ret[a.name] = a.amount
+
+        return ret
 
 
 class AssetDetailTable(Base):
