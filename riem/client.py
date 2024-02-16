@@ -1,83 +1,77 @@
-
 from __future__ import annotations
 
 import asyncio
 import pybotters
 
-from .response import RequestResponse, ResponseProxy
+from .response import ClientResponse, ClientResponseProxy
 from .models.core import (
-    HTTPRequestContents,
-    ExtraInformation,
+    HTTPRequestConponents,
+    ModelIdentifier,
     RequestContents,
 )
+from .fmt import Formatter
 
 
 class Client(pybotters.Client):
-    """Client
+    """HTTPClient
 
-    pybotters.Clientのラッパークラス。
-    pybotters.Clientの各リクエストメソッドに、riem.RequestContentsを渡せるようにする。
-    
+    Client for HTTP requests (HTTPクライアント).
+    Wrapper for pybotters.Client().
+
+    Attributes:
+        fmt (Formatter): Formatter.
     """
-    
-    def __init__(self, **kwargs):
+
+    def __init__(self, fmt: Formatter, **kwargs):
         super().__init__(**kwargs)
 
-    async def paralell_fetch(
-        self, 
-        *requests: RequestContents
-    ) -> ResponseProxy:
-        """ paralell_fetch
+        self.fmt = fmt
 
-        add later.
-        
-        """
+    async def _fetch(self, requests: RequestContents) -> ClientResponse | None:
 
-        tasks = []
-        for request in requests:
-            tasks.append(self.fetch(request))
-        
-        resps = await asyncio.gather(*tasks)
-        
-        ans = resps[0]
-        for resp in resps[1:]:
-            ans += resp
-        
-        return ResponseProxy(responses=ans)
-
-    async def fetch(
-        self, 
-        requests: RequestContents
-    ) -> ResponseProxy:
-        """ fetch
-
-        pybotters.Client.fetchのwrapperメソッド。
-        
-        """
-
-        https: HTTPRequestContents = requests.http_request_contents
-        ext_info: ExtraInformation = requests.extra_information
+        https: HTTPRequestConponents = requests.http_request_conponents
+        modelid: ModelIdentifier = requests.model_identifier
 
         resp = await super().fetch(
-            url=https.url, 
+            url=https.url,
             method=https.method,
             params=https.params,
             headers=https.headers,
             data=https.data,
         )
 
-        ans = []
-
         # Fetch data validation
         # https://pybotters.readthedocs.io/ja/stable/advanced.html#fetch-data-validation
+        crs = None
         if resp.data:
-            ans.append(
-                RequestResponse(
-                    exchange_name=ext_info.exchange_name,
-                    data_type=ext_info.data_type,
-                    arguments=ext_info.arguments,
-                    raw_data=resp.data,
-                )
+            crs = ClientResponse(
+                model_identifier=modelid,
+                acq_source="HTTP",
+                raw_data=resp.data,
             )
-        
-        return ResponseProxy(responses=ans)
+
+        return crs
+
+    async def fetch(self, requests: RequestContents) -> ClientResponseProxy:
+
+        crs = await self._fetch(requests)
+
+        if crs is None:
+            return ClientResponseProxy(responses=[])
+
+        crp = ClientResponseProxy(responses=[crs])
+
+        return self.fmt.format(crp)
+
+    async def paralell_fetch(self, *requests: RequestContents) -> ClientResponseProxy:
+
+        tasks = []
+        for request in requests:
+            tasks.append(self._fetch(request))
+
+        crs = await asyncio.gather(*tasks)
+        crs = [r for r in crs if r]
+
+        crp = ClientResponseProxy(responses=crs)
+
+        return self.fmt.format(crp)

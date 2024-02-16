@@ -1,8 +1,9 @@
 
+
 from .client import Client
-from .response import RequestResponse, ResponseProxy
+from .response import ClientResponse, ClientResponseProxy
 from .fmt import Formatter
-from .dbi import DatabaseInterface
+from .dbclient import DatabaseClient
 from .mi import ModelInterface
 
 # models

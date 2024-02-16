@@ -2,8 +2,8 @@
 
 from .core import (
     Exchange,
-    HTTPRequestContents,
-    ExtraInformation,
+    HTTPRequestConponents,
+    ModelIdentifier,
     RequestContents,
 )
 
@@ -32,11 +32,11 @@ class Bitbank(Exchange):
         method = 'GET'
 
         return RequestContents(
-            http_request_contents=HTTPRequestContents(
+            http_request_conponents=HTTPRequestConponents(
                 url=url,
                 method=method,
             ),
-            extra_information=ExtraInformation(
+            model_identifier=ModelIdentifier(
                 exchange_name=cls.exchange_name,
                 data_type='orderbooks',
                 arguments={'symbol': symbol},
@@ -50,11 +50,11 @@ class Bitbank(Exchange):
         method = 'GET'
 
         return RequestContents(
-            http_request_contents=HTTPRequestContents(
+            http_request_conponents=HTTPRequestConponents(
                 url=url,
                 method=method,
             ),
-            extra_information=ExtraInformation(
+            model_identifier=ModelIdentifier(
                 exchange_name=cls.exchange_name,
                 data_type='assets',
                 arguments={},
@@ -115,12 +115,12 @@ class Bitbank(Exchange):
             data['trigger_price'] = trigger_price
         
         return RequestContents(
-            http_request_contents=HTTPRequestContents(
+            http_request_conponents=HTTPRequestConponents(
                 url=url,
                 method=method,
                 data=data,
             ),
-            extra_information=ExtraInformation(
+            model_identifier=ModelIdentifier(
                 exchange_name=cls.exchange_name,
                 data_type='orders',
                 arguments={

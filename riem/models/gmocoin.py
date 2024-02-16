@@ -1,8 +1,8 @@
 
 from .core import (
     Exchange,
-    HTTPRequestContents,
-    ExtraInformation,
+    HTTPRequestConponents,
+    ModelIdentifier,
     RequestContents,
 )
 
@@ -34,12 +34,12 @@ class Gmocoin(Exchange):
         params = {'symbol': symbol}
 
         return RequestContents(
-            http_request_contents=HTTPRequestContents(
+            http_request_conponents=HTTPRequestConponents(
                 url=url,
                 method=method,
                 params=params,
             ),
-            extra_information=ExtraInformation(
+            model_identifier=ModelIdentifier(
                 exchange_name=cls.exchange_name,
                 data_type='orderbooks',
                 arguments={'symbol': symbol},
@@ -53,11 +53,11 @@ class Gmocoin(Exchange):
         method = 'GET'
 
         return RequestContents(
-            http_request_contents=HTTPRequestContents(
+            http_request_conponents=HTTPRequestConponents(
                 url=url,
                 method=method,
             ),
-            extra_information=ExtraInformation(
+            model_identifier=ModelIdentifier(
                 exchange_name=cls.exchange_name,
                 data_type='assets',
                 arguments={},
@@ -119,14 +119,15 @@ class Gmocoin(Exchange):
             data['cancelBefore'] = cancel_before
 
         return RequestContents(
-            http_request_contents=HTTPRequestContents(
+            http_request_conponents=HTTPRequestConponents(
                 url=url,
                 method=method,
                 data=data,
             ),
-            extra_information=ExtraInformation(
+            model_identifier=ModelIdentifier(
                 exchange_name=self.exchange_name,
                 data_type='orders',
+                #TODO: Noneを排除するようにする
                 arguments={
                     'symbol': symbol,
                     'side': side,
@@ -151,5 +152,4 @@ class Gmocoin(Exchange):
     @property
     def get_private_endpoint(self) -> str:
         return self.private_endpoint
-        
         

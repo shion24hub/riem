@@ -1,359 +1,208 @@
-
 from __future__ import annotations
 
 import dataclasses
-from typing import Any, Callable
-import copy
+import datetime
+from typing import Any, Callable, Literal
+
+import xxhash
+
+from .models.core import ModelIdentifier, RequestContents
 
 
 @dataclasses.dataclass
-class RequestResponse:
-    exchange_name: str | None
-    data_type: str | None
-    arguments: dict[str, Any]
+class ClientResponse:
+    """ClientResponse
+
+    Response from the client (クライアントレスポンス).
+    Contains the response from the client.
+
+    Attributes:
+        model_identifier (ModelIdentifier): Model identifier.
+        acq_source (Literal['HTTP', 'DB']): Acquisition source.
+        raw_data (Any): Raw data decoded from JSON.
+        formatted_data (Any): Formatted data.
+
+        ts (float): Timestamp.
+        model_hash (str): Model hash.
+            See models.core.ModelIdentifier for more details.
+
+    """
+
+    model_identifier: ModelIdentifier
+    acq_source: Literal["HTTP", "DB"]
     raw_data: Any
     formatted_data: Any = None
 
+    modelhash: str = dataclasses.field(init=False)
+    ts: float = dataclasses.field(init=False)
+
+    def __post_init__(self) -> None:
+
+        self.modelhash = self.model_identifier.modelhash
+        self.ts = datetime.datetime.now().timestamp()
+
 
 @dataclasses.dataclass
-class ResponseProxy:
-    """ResponseProxy
-    
-    exchange_nameとdata_typeとargumentsから、一意のidを取得し、
-    そのキーを保持する。
+class ClientResponseProxy:
+    """ClientResponseProxy
 
-    値を足し算できるので、そのままストアとして使える。
-    
+    Proxy for ClientResponse (クライアントレスポンスプロキシ).
+    Provides methods for handling ClientResponse.
+
+    Attributes:
+        responses (list[ClientResponse]): List of ClientResponse.
+        mapping (bool): Whether to use mapping.
+            If False, can't use all methods that use hash_idxs_map.
+            To re-enable mapping, use remap_hash_idxs().
+
+        hash_idxs_map (dict[str, set[int]]): Hash index map.
+
     """
 
-    responses: list[RequestResponse]
+    responses: list[ClientResponse]
+    mapping: bool = True
+
+    hash_idxs_map: dict[str, set[int]] = dataclasses.field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+
+        if self.mapping:
+            self._map_hash_idxs()
 
     def __len__(self) -> int:
         return len(self.responses)
-    
-    def __getitem__(self, index: int) -> RequestResponse:
+
+    def __getitem__(self, index: int):
         return self.responses[index]
-    
+
     def __iter__(self):
         return iter(self.responses)
-    
-    def __bool__(self) -> bool:
+
+    def __next__(self):
+        return next(self.responses)
+
+    def __bool__(self):
         return bool(self.responses)
-    
-    def __add__(self, other: ResponseProxy) -> ResponseProxy:
-        return ResponseProxy(responses=self.responses + other.responses)
-    
-    def __find(
-            self,
-            *,
-            exchange_name: str | list[str] | None = None,
-            data_type: str | list[str] | None = None,
-            arguments: dict[str, Any] | list[dict[str, Any]] | None = None,
-            only_formatted: bool = False,
-        ) -> list[tuple[int, RequestResponse]]:
-        """ __find
 
-        self.find(), self.arg_find(), self.identify(), self.arg_identify()の内部処理。
-        Descriptionは、各メソッドを参照。
+    def __add__(self, other: ClientResponseProxy) -> ClientResponseProxy:
+        return ClientResponseProxy(responses=self.responses + other.responses)
 
-        Args:
-            exchange_name (str | list[str] | None, optional): Defaults to None.
-            data_type (str | list[str] | None, optional): Defaults to None.
-            arguments (dict[str, Any] | list[dict[str, Any]] | None, optional): Exact match. Defaults to None.
-            only_formatted (bool, optional): Defaults to False.
-        
-        Returns:
-            list[tuple[int, RequestResponse]]: intはself.responsesのindexを表す。
-        
-        [TODO]:
-        - [+] ExtendedRequestResponseのother_informationに対応したいが、
-                このメソッドに追加するのは責務を逸脱していると思われる。
-                ExtendedRequestResponsesでこのクラスを継承してなんとかしたい。
+    def _map_hash_idxs(self) -> None:
 
-        """
+        for i, r in enumerate(self.responses):
+            for j in range(0, len(r.modelhash), 16):
 
-        if arguments is not None and type(arguments) is not list:
-            arguments = [arguments]
+                h = r.modelhash[j : j + 16]
+                if h not in self.hash_idxs_map.keys():
+                    self.hash_idxs_map[h] = set()
 
-        ans = []
-        for i, response in enumerate(self.responses):
-            if exchange_name is not None and response.exchange_name not in exchange_name:
-                continue
-            if data_type is not None and response.data_type not in data_type:
-                continue
+                self.hash_idxs_map[h].add(i)
 
-            # argumentsの処理
-            if arguments is not None:
-                arg_flag = False
-                for arg in arguments:
-                    if response.arguments == arg:
-                        arg_flag = True
-                        break
-                if arg_flag == False:
-                    continue
-            
-            # only formattedの処理
-            if only_formatted and response.formatted_data is None:
-                continue
-            
-            ans.append((i, response))
-        
-        return ans
-    
+    def remap_hash_idxs(self) -> None:
+
+        self.hash_idxs_map = {}
+        self._map_hash_idxs()
+
+    def _find(
+        self,
+        exchange_names: list[str] | None = None,
+        data_types: list[str] | None = None,
+        arguments_list: list[dict[str, Any]] | None = None,
+    ) -> list[tuple[int, ClientResponse]]:
+
+        enu = set(range(len(self)))
+        if exchange_names is not None:
+            enu = set()
+            for en in exchange_names:
+                h = xxhash.xxh64(en).hexdigest()
+                enu = enu | self.hash_idxs_map[h]
+
+        dtu = set(range(len(self)))
+        if data_types is not None:
+            dtu = set()
+            for dt in data_types:
+                h = xxhash.xxh64(dt).hexdigest()
+                dtu = dtu | self.hash_idxs_map[h]
+
+        au = set(range(len(self)))
+        if arguments_list is not None:
+            au = set()
+            for a in arguments_list:
+                atext = ModelIdentifier.generate_argstext(a)
+                h = xxhash.xxh64(atext).hexdigest()
+                au = au | self.hash_idxs_map[h]
+
+        indices = enu & dtu & au
+
+        return [(i, self.responses[i]) for i in indices]
+
     def find(
-        self, 
-        *, 
-        exchange_name: str | list[str] | None = None, 
-        data_type: str | list[str] | None = None,
-        arguments: dict[str, Any] | list[dict[str, Any]] | None = None,
-        only_formatted: bool = False,
-    ) -> ResponseProxy:
-        """ find
+        self,
+        exchange_names: list[str] | None = None,
+        data_types: list[str] | None = None,
+        arguments_list: list[dict[str, Any]] | None = None,
+    ) -> ClientResponseProxy:
 
-        検索条件に合致するRequestResponseを探し、それらをRequestResponsesとしてまとめて返す。
-        内部処理は__findメソッドを参照。
-
-        [Overall Description]:\n
-        各引数のリストの中身は、OR条件で絞り込まれる。
-        一方、各引数どうしは、AND条件で絞り込まれる。
-        例えば、exchange_name=['bitbank'], data_type=['orderbooks', 'assets']とすると、
-        exchange_nameが'bitbank'で、かつ、data_typeが'orderbooks'または'assets'であるような
-        RequestResponseが格納されたRequestResponsesが返される。
-
-        [About arguments]:\n
-        argumentsは、渡した辞書に完全一致する辞書を持つRequestResponseを探す。
-        
-
-        Args:
-            exchange_name (str | list[str] | None, optional): Defaults to None.
-            data_type (str | list[str] | None, optional): Defaults to None.
-            arguments (dict[str, Any] | list[dict[str, Any]] | None, optional): Exact match. Defaults to None.
-            only_formatted (bool, optional): Defaults to False.
-        
-        Returns:
-            RequestResponses | None: [description]
-        
-        [TODO]:
-        - [+] 検索結果が0のときにNoneを返すのは、メソッドチェーンに対応できなくさせる。
-                確定でRequestResponsesを返すようにしたい。
-                影響範囲が非常に大きいので、修正する場合は注意すること。
-
-        """
-        
-        ans = self.__find(
-            exchange_name=exchange_name,
-            data_type=data_type,
-            arguments=arguments,
-            only_formatted=only_formatted,
+        return ClientResponseProxy(
+            responses=[
+                r for _, r in self._find(exchange_names, data_types, arguments_list)
+            ]
         )
 
-        return ResponseProxy(responses=[response for _, response in ans])
-    
     def arg_find(
         self,
-        *,
-        exchange_name: str | list[str] | None = None,
-        data_type: str | list[str] | None = None,
-        arguments: dict[str, Any] | list[dict[str, Any]] | None = None,
-        only_formatted: bool = False,
+        exchange_names: list[str] | None = None,
+        data_types: list[str] | None = None,
+        arguments_list: list[dict[str, Any]] | None = None,
     ) -> list[int]:
-        """ arg_find
 
-        検索条件に合致するRequestResponseを探し、それらのself.responsesでのindexのリストを返す。
-        内部処理は__findメソッドを参照。
+        return [i for i, _ in self._find(exchange_names, data_types, arguments_list)]
 
-        [Overall Description]:\n
-        各引数のリストの中身は、OR条件で絞り込まれる。
-        一方、各引数どうしは、AND条件で絞り込まれる。
-        例えば、exchange_name=['bitbank'], data_type=['orderbooks', 'assets']とすると、
-        exchange_nameが'bitbank'で、かつ、data_typeが'orderbooks'または'assets'であるような
-        RequestResponseが格納されたRequestResponsesが返される。
+    def mfind(self, *requests: RequestContents) -> ClientResponseProxy:
 
-        [About arguments]:\n
-        argumentsは、渡した辞書に完全一致する辞書を持つRequestResponseを探す。
-        
-
-        Args:
-            exchange_name (str | list[str] | None, optional): Defaults to None.
-            data_type (str | list[str] | None, optional): Defaults to None.
-            arguments (dict[str, Any] | list[dict[str, Any]] | None, optional): Exact match. Defaults to None.
-            only_formatted (bool, optional): Defaults to False.
-        
-        Returns:
-            list[int] | None: 検索条件に合致するRequestResponseのindex
-
-        """
-
-        ans = self.__find(
-            exchange_name=exchange_name,
-            data_type=data_type,
-            arguments=arguments,
-            only_formatted=only_formatted,
+        return ClientResponseProxy(
+            responses=[
+                r
+                for _, r in self._find(
+                    [r.exchange_name for r in requests],
+                    [r.data_type for r in requests],
+                    [r.arguments for r in requests],
+                )
+            ]
         )
 
-        return [index for index, _ in ans]
-    
-    def identify(
-            self,
-            *,
-            exchange_name: str | list[str] | None = None,
-            data_type: str | list[str] | None = None,
-            arguments: dict[str, Any] | list[dict[str, Any]] | None = None,
-        ) -> RequestResponse | None:
-        """identify
+    def sort_by_ts(self, desc=False) -> ClientResponseProxy:
 
-        一意に識別できなければ、Noneを返すfind.
-        同じ結果は、findの返り値のlen()が1であることを調べることで得られる。
-        可読性向上のために呼び出されることを想定している。
-        なお、only_formattedがなくても一意に特定できるはずなので、この引数は受け取らない。
-
-        Args:
-            exchange_name (str | list[str] | None, optional): Defaults to None.
-            data_type (str | list[str] | None, optional): Defaults to None.
-            arguments (dict[str, Any] | list[dict[str, Any]] | None, optional): Exact match. Defaults to None.
-
-        Returns:
-            RequestResponse | None: [description]
-        
-        [TODO]:
-        - [+] 検索結果が0のときにNoneを返すのは、メソッドチェーンに対応できなくさせる。
-                確定でRequestResponsesを返すようにしたい。
-                影響範囲が非常に大きいので、修正する場合は注意すること。
-        
-        """
-        
-        ans = self.__find(
-            exchange_name=exchange_name,
-            data_type=data_type,
-            arguments=arguments,
+        return ClientResponseProxy(
+            responses=[
+                r
+                for _, r in sorted(
+                    [(i, r) for i, r in enumerate(self.responses)],
+                    key=lambda x: x[1].ts,
+                    reverse=desc,
+                )
+            ],
+            mapping=False,
         )
-
-        if len(ans) == 1:
-            return ans[0][1]
-        else:
-            return None
-        
-    def arg_identify(
-            self,
-            *,
-            exchange_name: str | None = None,
-            data_type: str | None = None,
-            arguments: dict[str, Any] | list[dict[str, Any]] | None = None,
-        ) -> int | None:
-        """arg_identify
-
-        一意に識別できなければ、Noneを返すarg_find.
-        同じ結果は、arg_findの返り値のlen()が1であることを調べることで得られる。
-        可読性向上のために呼び出されることを想定している。
-        なお、only_formattedがなくても一意に特定できるはずなので、この引数は受け取らない。
-
-        Args:
-            exchange_name (str | None, optional): Defaults to None.
-            data_type (str | None, optional): Defaults to None.
-            arguments (dict[str, Any] | list[dict[str, Any]] | None, optional): Exact match. Defaults to None.
-        
-        Returns:
-            int | None: [description]
-
-        """
-
-        ans = self.__find(
-            exchange_name=exchange_name,
-            data_type=data_type,
-            arguments=arguments,
-        )
-
-        if len(ans) == 1:
-            return ans[0][0]
-        else:
-            return None
-
-    def replace(
-            self,
-            response: RequestResponse
-        ) -> ResponseProxy:
-        """
-        add later.
-        """
-
-        copied_self: ResponseProxy = copy.deepcopy(self)
-
-        index = self.arg_identify(
-            exchange_name=response.exchange_name,
-            data_type=response.data_type,
-            arguments=response.arguments,
-        )
-
-        if index is None:
-            raise Exception('cannot identify response.')
-        
-        copied_self.responses[index] = response
-
-        return copied_self
-        
-    def replace_index():
-        pass
 
     def map_to_responses(
-            self, 
-            f: Callable[[RequestResponse], RequestResponse],
-        ) -> ResponseProxy:
-        """
-        map関数。自身の持っているresponsesに対して、引数に与えられた関数fを適用する。
-        関数fは、RequestResponseを引数に取り、RequestResponseを返すように設計しなければならない。
+        self, f: Callable[[ClientResponse], ClientResponse]
+    ) -> ClientResponseProxy:
 
-        [note]:
-        - 引数を指定することはできない。
-        - 引数を指定したい場合は、apply_to_responsesメソッドを使う。
-        """
+        new_resps: list[ClientResponse] = []
+        for resp in self:
+            new_resps.append(f(resp))
 
-        copied_self: ResponseProxy = copy.deepcopy(self)
-        
-        for response in self.responses:
-            res: RequestResponse = f(response)
-            copied_self: ResponseProxy = copied_self.replace(res)
-
-        return copied_self
+        return ClientResponseProxy(responses=new_resps)
 
     def apply_to_responses(
-            self, 
-            f: Callable[[RequestResponse, dict[str, Any]], RequestResponse],
-            arguments: dict[str, Any],
-        ) -> ResponseProxy:
-        """
-        apply関数。自身の持っているresponsesに対して、引数に与えられた関数fを適用する。
-        関数fは、RequestResponseとdict[str, Any]を引数に取り、RequestResponseを返すように設計しなければならない。
-        関数fの第二引数arguments: dict[str, Any]は、関数fに渡される引数である。
-        
-        [note]:
-        - 引数を指定しないことはできない。
-        - 引数を指定しない場合は、map_to_responsesメソッドを使う。
-        """
+        self,
+        f: Callable[[ClientResponse, dict[str, Any]], ClientResponse],
+        arguments: dict[str, Any],
+    ) -> ClientResponseProxy:
 
-        copied_self: ResponseProxy = copy.deepcopy(self)
+        new_resps: list[ClientResponse] = []
+        for resp in self:
+            new_resps.append(f(resp, arguments))
 
-        for response in self.responses:
-            res: RequestResponse = f(response, arguments)
-            copied_self: ResponseProxy = copied_self.replace(res)
-        
-        return copied_self
-    
-    @property
-    def exchanges(self) -> list[str]:
-        return list(set([response.exchange_name for response in self.responses]))
-    
-    @property
-    def data_types(self) -> list[str]:
-        return list(set([response.data_type for response in self.responses]))
-
-    @property
-    def arguments_list(self) -> list[dict[str, Any]]:
-        return [response.arguments for response in self.responses]
-    
-    @property
-    def raw_data_list(self) -> list[Any]:
-        return [response.raw_data for response in self.responses]
-    
-    @property
-    def formatted_data_list(self) -> list[Any]:
-        return [response.formatted_data for response in self.responses]
+        return ClientResponseProxy(responses=new_resps)

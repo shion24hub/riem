@@ -1,7 +1,4 @@
-
-import copy
-
-from .response import ResponseProxy
+from .response import ClientResponse, ClientResponseProxy
 from .formats.converter import Converter
 
 
@@ -14,19 +11,39 @@ class Formatter:
             for converter in converters
         }
 
-    def format(self, responses: ResponseProxy) -> ResponseProxy:
+    def format(self, responses: ClientResponseProxy) -> ClientResponseProxy:
         
-        cresps = copy.deepcopy(responses)
-
-        for i, r in enumerate(responses):
+        crp = ClientResponseProxy(responses=[], mapping=False)
+        for cr in responses:
             
-            fd = self.conv_map[r.data_type].handle(
-                exchange_name=r.exchange_name,
-                raw_data=r.raw_data
-            )
+            model_id = cr.model_identifier
 
-            cresps[i].formatted_data = fd
+            fd = None
+            if model_id.data_type in self.conv_map:
+
+                en = model_id.exchange_name
+                if cr.acq_source == 'DB':
+                    en = 'db'
+
+                fd = self.conv_map[model_id.data_type].handle(
+                        exchange_name=en,
+                        raw_data=cr.raw_data,
+                    )
+
+            crp += ClientResponseProxy(
+                responses=[
+                    ClientResponse(
+                        model_identifier=model_id,
+                        acq_source=cr.acq_source,
+                        raw_data=cr.raw_data,
+                        formatted_data=fd,
+                    )
+                ],
+                mapping=False,
+            )
         
-        return cresps
+        crp.remap_hash_idxs()
+
+        return crp
 
     
