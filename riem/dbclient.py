@@ -1,18 +1,18 @@
 from typing import Any, Callable
 
-from .models.core import ModelIdentifier, RequestContents
-from .response import ClientResponse, ClientResponseProxy
-from .fmt import Formatter
-from .formats.molds.orderbook import Orderbook
-from .formats.molds.asset import Asset
 from .database.database import Database
 from .database.tables import (
-    OrderbookTable,
-    AskTable,
+    AskTable, 
+    AssetDetailTable, 
+    AssetTable, 
     BidTable,
-    AssetTable,
-    AssetDetailTable,
+    OrderbookTable
 )
+from .fmt import Formatter
+from .formats.molds.asset import Asset
+from .formats.molds.orderbook import Orderbook
+from .models.core import ModelIdentifier, RequestContents
+from .response import ClientResponse, ClientResponseProxy
 
 
 def create_orderbooks(r: ClientResponse):
@@ -58,7 +58,7 @@ class DatabaseClient:
         "assets": AssetTable,
     }
 
-    def __init__(self,fmt: Formatter, database: Database) -> None:
+    def __init__(self, fmt: Formatter, database: Database) -> None:
 
         self.fmt = fmt
         self.database = database
@@ -98,7 +98,7 @@ class DatabaseClient:
 
                 # create response
                 for res in results:
-                        crp += ClientResponseProxy(
+                    crp += ClientResponseProxy(
                         responses=[
                             ClientResponse(
                                 model_identifier=model_id,

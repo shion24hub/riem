@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 import asyncio
+
 import pybotters
 
-from .response import ClientResponse, ClientResponseProxy
-from .models.core import (
-    HTTPRequestConponents,
-    ModelIdentifier,
-    RequestContents,
-)
 from .fmt import Formatter
+from .models.core import (
+    HTTPRequestConponents, 
+    ModelIdentifier,
+    RequestContents
+)
+from .response import ClientResponse, ClientResponseProxy
 
 
 class Client(pybotters.Client):

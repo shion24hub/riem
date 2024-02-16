@@ -1,5 +1,3 @@
-
-
 from .client import Client
 from .response import ClientResponse, ClientResponseProxy
 from .fmt import Formatter
