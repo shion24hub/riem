@@ -5,7 +5,7 @@ from .dbclient import DatabaseClient
 from .mi import ModelInterface
 
 # models
-from .models.core import Exchange
+from .models.core import Exchange, RequestContents, ModelIdentifier
 from .models.gmocoin import Gmocoin
 from .models.bitbank import Bitbank
 from .models.bybit import Bybit
@@ -20,4 +20,5 @@ from .formats.molds.asset import Asset
 from .formats.asset import AssetConverter
 
 # database
+from .database.base import Base
 from .database.database import Database
