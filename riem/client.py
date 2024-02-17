@@ -64,7 +64,7 @@ class Client(pybotters.Client):
 
         return self.fmt.format(crp)
 
-    async def paralell_fetch(self, *requests: RequestContents) -> ClientResponseProxy:
+    async def paralell_fetch(self, *requests: tuple[RequestContents]) -> ClientResponseProxy:
 
         tasks = []
         for request in requests:
