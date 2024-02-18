@@ -47,6 +47,16 @@ def create_assets(r: ClientResponse):
 
 
 class DatabaseClient:
+    """ DatabaseClient
+
+    Client for riem.Database (データベースクライアント). 
+    Provides methods for CRUD method to the database.
+
+    Attributes:
+        fmt (Formatter): riem.Formatter.
+        database (Database): riem.Database.
+    
+    """
 
     create_funcs: dict[str, Callable[[ClientResponse], Any]] = {
         "orderbooks": create_orderbooks,
