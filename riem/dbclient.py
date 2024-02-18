@@ -73,6 +73,12 @@ class DatabaseClient:
             session.add_all(records)
             session.commit()
 
+    def create_from_table(self, table_objs: list[Any]):
+        
+        with self.database.session as session:
+            session.add_all(table_objs)
+            session.commit()
+
     def read(
         self,
         *requests: RequestContents,
@@ -114,3 +120,24 @@ class DatabaseClient:
         crp = self.fmt.format(crp)
 
         return crp
+    
+    def read_from_table(
+        self, 
+        table: Any, 
+        desc: bool = True, 
+        limit: int = 1
+    ) -> list[dict[str, Any]]:
+
+        ans = []
+
+        with self.database.session as session:
+
+            query = session.query(table)
+            if desc:
+                query = query.order_by(table.id.desc())
+            results = query.limit(limit)
+
+            for res in results:                
+                ans.append(res)
+        
+        return ans
