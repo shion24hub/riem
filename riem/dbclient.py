@@ -73,29 +73,29 @@ class DatabaseClient:
         self.fmt = fmt
         self.database = database
 
-    def create(self, resps: ClientResponseProxy):
+    def crp_insert(self, crp: ClientResponseProxy) -> None:
 
         records = []
-        for r in resps:
+        for r in crp:
             records.append(self.create_funcs[r.model_identifier.data_type](r))
-
+        
         with self.database.session as session:
             session.add_all(records)
             session.commit()
+    
+    def insert(self, table_objs: list[Any]) -> None:
 
-    def create_from_table(self, table_objs: list[Any]):
-        
         with self.database.session as session:
             session.add_all(table_objs)
             session.commit()
-
-    def read(
+    
+    def rc_read(
         self,
         *requests: RequestContents,
         is_desc=True,
         limit: int = 1,
     ) -> ClientResponseProxy:
-
+        
         crp = ClientResponseProxy(responses=[], mapping=False)
 
         with self.database.session as session:
@@ -131,7 +131,7 @@ class DatabaseClient:
 
         return crp
     
-    def read_from_table(
+    def read(
         self, 
         table: Any, 
         desc: bool = True, 
