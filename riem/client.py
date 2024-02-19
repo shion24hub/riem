@@ -5,11 +5,7 @@ import asyncio
 import pybotters
 
 from .fmt import Formatter
-from .models.core import (
-    HTTPRequestConponents, 
-    ModelIdentifier,
-    RequestContents
-)
+from .models.core import HTTPRequestConponents, ModelIdentifier, RequestContents
 from .response import ClientResponse, ClientResponseProxy
 
 
@@ -28,10 +24,19 @@ class Client(pybotters.Client):
 
         self.fmt = fmt
 
-    async def _fetch(self, requests: RequestContents) -> ClientResponse | None:
+    async def __aenter__(self) -> Client:
+        return self
 
-        https: HTTPRequestConponents = requests.http_request_conponents
-        modelid: ModelIdentifier = requests.model_identifier
+    async def __aexit__(self, *args: asyncio.Any) -> None:
+        return await super().__aexit__(*args)
+
+    async def _fetch(
+        self, 
+        rcs: RequestContents
+    ) -> ClientResponse | None:
+
+        https: HTTPRequestConponents = rcs.http_request_conponents
+        modelid: ModelIdentifier = rcs.model_identifier
 
         resp = await super().fetch(
             url=https.url,
@@ -53,9 +58,9 @@ class Client(pybotters.Client):
 
         return crs
 
-    async def fetch(self, requests: RequestContents) -> ClientResponseProxy:
+    async def fetch(self, rc: RequestContents) -> ClientResponseProxy:
 
-        crs = await self._fetch(requests)
+        crs = await self._fetch(rc)
 
         if crs is None:
             return ClientResponseProxy(responses=[])
@@ -64,10 +69,13 @@ class Client(pybotters.Client):
 
         return self.fmt.format(crp)
 
-    async def paralell_fetch(self, *requests: tuple[RequestContents]) -> ClientResponseProxy:
+    async def paralell_fetch(
+        self, 
+        *rcs: tuple[RequestContents]
+    ) -> ClientResponseProxy:
 
         tasks = []
-        for request in requests:
+        for request in rcs:
             tasks.append(self._fetch(request))
 
         crs = await asyncio.gather(*tasks)
