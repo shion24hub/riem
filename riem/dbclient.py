@@ -6,11 +6,13 @@ from .database.tables import (
     AssetDetailTable, 
     AssetTable, 
     BidTable,
-    OrderbookTable
+    OrderbookTable,
+    OrderTable,
 )
 from .fmt import Formatter
 from .formats.molds.asset import Asset
 from .formats.molds.orderbook import Orderbook
+from .formats.molds.order import Order
 from .models.core import ModelIdentifier, RequestContents
 from .response import ClientResponse, ClientResponseProxy
 
@@ -46,6 +48,18 @@ def create_assets(r: ClientResponse):
     )
 
 
+def create_orders(r: ClientResponse):
+
+    model_id: ModelIdentifier = r.model_identifier
+    fd: Order = r.formatted_data
+
+    return OrderTable(
+        modelhash=model_id.modelhash,
+        exchange_name=model_id.exchange_name,
+        order_id=fd.order_id,
+    )
+
+
 class DatabaseClient:
     """ DatabaseClient
 
@@ -61,11 +75,13 @@ class DatabaseClient:
     create_funcs: dict[str, Callable[[ClientResponse], Any]] = {
         "orderbooks": create_orderbooks,
         "assets": create_assets,
+        "orders": create_orders,
     }
 
     tables: dict[str, Any] = {
         "orderbooks": OrderbookTable,
         "assets": AssetTable,
+        "orders": OrderTable,
     }
 
     def __init__(self, fmt: Formatter, database: Database) -> None:

@@ -10,6 +10,7 @@ from sqlalchemy.types import DateTime, Integer, String
 
 from .base import Base
 
+
 # Orderbook
 
 
@@ -17,14 +18,13 @@ class OrderbookTable(Base):
     __tablename__ = "orderbook"
 
     id = Column(Integer, primary_key=True)
+    created_on = Column(DateTime(), default=datetime.now)
 
     modelhash = Column(String)
     exchange_name = Column(String)
     symbol = Column(String)
     asks = relationship("AskTable", backref="orderbook")
     bids = relationship("BidTable", backref="orderbook")
-
-    created_on = Column(DateTime(), default=datetime.now)
 
     def __repr__(self) -> str:
         attrs = "modelhash={}, exchange_name={}, symbol={}, ask={}, bid={}".format(
@@ -72,12 +72,11 @@ class AssetTable(Base):
     __tablename__ = "asset"
 
     id = Column(Integer, primary_key=True)
+    created_on = Column(DateTime(), default=datetime.now)
 
     modelhash = Column(String)
     exchange_name = Column(String)
     asset = relationship("AssetDetailTable", backref="asset")
-
-    created_on = Column(DateTime(), default=datetime.now)
 
     def __repr__(self) -> str:
         attrs = "modelhash={}, exchange_name={}, asset={}".format(
@@ -106,3 +105,30 @@ class AssetDetailTable(Base):
 
     def __repr__(self) -> str:
         return "AssetDetailTable(name={}, amount={})".format(self.name, self.amount)
+
+
+# Order
+
+
+class OrderTable(Base):
+    __tablename__ = "order"
+
+    id = Column(Integer, primary_key=True)
+    created_on = Column(DateTime(), default=datetime.now)
+
+    modelhash = Column(String)
+    exchange_name = Column(String)
+    order_id = Column(String)
+
+    def __repr__(self) -> str:
+        attrs = "modelhash={}, exchange_name={}, order_id={}".format(
+            self.modelhash, self.exchange_name, self.order_id
+        )
+
+        return "OrderTable({})".format(attrs)
+    
+    @property
+    def for_fmt(self) -> dict[str, Any]:
+        return {
+            "order_id": self.order_id
+        }

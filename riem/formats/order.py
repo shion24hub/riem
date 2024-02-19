@@ -1,31 +1,31 @@
-
-from __future__ import annotations
-
-import dataclasses
 from typing import Any
 
-from .core import Formatter
+from .converter import Converter
+from .molds.order import Order
 
 
-@dataclasses.dataclass
-class Order:
-    order_id: str
+class OrderConverter(Converter):
 
+    def __init__(self) -> None:
+        self.data_type = "orders"
 
-class OrderFormatter(Formatter):
+    def handle(self, exchange_name: str, raw_data: Any) -> Order | None:
 
-    def handle_by_exchange(self, exchange_name: str, raw_data: Any) -> Order | None:
-
-        if exchange_name == 'gmocoin':
-            return self.__format_order_from_gmocoin(raw_data)
-        elif exchange_name == 'bitbank':
-            return self.__format_order_from_bitbank(raw_data)
-        elif exchange_name == 'bybit':
-            return self.__format_order_from_bybit(raw_data)
-        else:
-            raise ValueError(f'exchange_name: {exchange_name} is not supported.')
+        if exchange_name == "gmocoin":
+            return self.format_from_gmocoin(raw_data)
+        
+        if exchange_name == "bitbank":
+            return self.format_from_bitbank(raw_data)
+        
+        if exchange_name == "bybit":
+            return self.format_from_bybit(raw_data)
+        
+        if exchange_name == "db":
+            return self.format_from_db(raw_data)
+        
+        return None
     
-    def __format_order_from_gmocoin(self, raw_data) -> Order | None:
+    def format_from_gmocoin(self, raw_data: Any) -> Order | None:
 
         try:
             return Order(
@@ -34,7 +34,7 @@ class OrderFormatter(Formatter):
         except KeyError:
             return None
     
-    def __format_order_from_bitbank(self, raw_data) -> Order | None:
+    def format_from_bitbank(self, raw_data: Any) -> Order | None:
 
         try:
             return Order(
@@ -42,12 +42,26 @@ class OrderFormatter(Formatter):
             )
         except KeyError:
             return None
-        
-    def __format_order_from_bybit(self, raw_data) -> Order | None:
-        
+    
+    def format_from_bybit(self, raw_data: Any) -> Order | None:
+            
         try:
             return Order(
                 order_id=raw_data['result']['orderId']
             )
         except KeyError:
             return None
+        
+    def format_from_db(self, raw_data: Any) -> Order | None:
+        
+        try:
+            return Order(
+                order_id=raw_data['order_id']
+            )
+        except KeyError:
+            return None
+        
+    @property
+    def get_data_type(self) -> str:
+        return self.data_type
+    

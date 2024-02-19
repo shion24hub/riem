@@ -19,6 +19,9 @@ from .formats.orderbook import OrderbookConverter
 from .formats.molds.asset import Asset
 from .formats.asset import AssetConverter
 
+from .formats.molds.order import Order
+from .formats.order import OrderConverter
+
 # database
 from .database.base import Base
 from .database.database import Database
