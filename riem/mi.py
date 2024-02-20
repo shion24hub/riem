@@ -9,6 +9,9 @@ class ModelInterface:
         for model in models:
             self.models[model.exchange_name] = model
 
+    def get_ticker(self, exchange_name: str, **kwargs) -> RequestContents:
+        return self.models[exchange_name].get_ticker(**kwargs)
+
     def get_orderbooks(self, exchange_name: str, **kwargs) -> RequestContents:
         return self.models[exchange_name].get_orderbooks(**kwargs)
 
