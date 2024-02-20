@@ -2,17 +2,20 @@ from typing import Any, Callable
 
 from .database.database import Database
 from .database.tables import (
-    AskTable, 
-    AssetDetailTable, 
-    AssetTable, 
+    AskTable,
+    AssetDetailTable,
+    AssetTable,
     BidTable,
     OrderbookTable,
     OrderTable,
+    TickerTable,
+    TickerDetailTable,
 )
 from .fmt import Formatter
 from .formats.molds.asset import Asset
 from .formats.molds.orderbook import Orderbook
 from .formats.molds.order import Order
+from .formats.molds.ticker import Ticker
 from .models.core import ModelIdentifier, RequestContents
 from .response import ClientResponse, ClientResponseProxy
 
@@ -60,28 +63,47 @@ def create_orders(r: ClientResponse):
     )
 
 
-class DatabaseClient:
-    """ DatabaseClient
+def create_ticker(r: ClientResponse):
 
-    Client for riem.Database (データベースクライアント). 
+    model_id: ModelIdentifier = r.model_identifier
+    fd: Ticker = r.formatted_data
+
+    details = [
+        TickerDetailTable(symbol=k, ask=v["ask"], bid=v["bid"])
+        for k, v in fd.ticker_detail.items()
+    ]
+
+    return TickerTable(
+        modelhash=model_id.modelhash,
+        exchange_name=model_id.exchange_name,
+        ticker=details,
+    )
+
+
+class DatabaseClient:
+    """DatabaseClient
+
+    Client for riem.Database (データベースクライアント).
     Provides methods for CRUD method to the database.
 
     Attributes:
         fmt (Formatter): riem.Formatter.
         database (Database): riem.Database.
-    
+
     """
 
     create_funcs: dict[str, Callable[[ClientResponse], Any]] = {
         "orderbooks": create_orderbooks,
         "assets": create_assets,
         "orders": create_orders,
+        "ticker": create_ticker,
     }
 
     tables: dict[str, Any] = {
         "orderbooks": OrderbookTable,
         "assets": AssetTable,
         "orders": OrderTable,
+        "ticker": TickerTable,
     }
 
     def __init__(self, fmt: Formatter, database: Database) -> None:
@@ -94,24 +116,24 @@ class DatabaseClient:
         records = []
         for r in crp:
             records.append(self.create_funcs[r.model_identifier.data_type](r))
-        
+
         with self.database.session as session:
             session.add_all(records)
             session.commit()
-    
+
     def insert(self, table_objs: list[Any]) -> None:
 
         with self.database.session as session:
             session.add_all(table_objs)
             session.commit()
-    
+
     def rc_read(
         self,
         *requests: RequestContents,
         is_desc=True,
         limit: int = 1,
     ) -> ClientResponseProxy:
-        
+
         crp = ClientResponseProxy(responses=[], mapping=False)
 
         with self.database.session as session:
@@ -146,12 +168,9 @@ class DatabaseClient:
         crp = self.fmt.format(crp)
 
         return crp
-    
+
     def read(
-        self, 
-        table: Any, 
-        desc: bool = True, 
-        limit: int = 1
+        self, table: Any, desc: bool = True, limit: int = 1
     ) -> list[dict[str, Any]]:
 
         ans = []
@@ -163,7 +182,7 @@ class DatabaseClient:
                 query = query.order_by(table.id.desc())
             results = query.limit(limit)
 
-            for res in results:                
+            for res in results:
                 ans.append(res)
-        
+
         return ans

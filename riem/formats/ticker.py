@@ -11,23 +11,23 @@ class TickerConverter(Converter):
 
     def handle(self, exchange_name: str, raw_data: Any):
 
-        if exchange_name == 'gmocoin':
+        if exchange_name == "gmocoin":
             return self.format_from_gmocoin(raw_data)
-        
-        if exchange_name == 'bitbank':
+
+        if exchange_name == "bitbank":
             return self.format_from_bitbank(raw_data)
 
-        if exchange_name == 'bitbank':
+        if exchange_name == "bitbank":
             return self.format_from_bybit(raw_data)
-        
-        if exchange_name == 'gmocoinfx':
+
+        if exchange_name == "gmocoinfx":
             return self.format_from_gmocoinfx(raw_data)
-        
-        if exchange_name == 'db':
+
+        if exchange_name == "db":
             return self.format_from_db(raw_data)
-        
+
         return None
-    
+
     def format_from_gmocoin(self, raw_data: Any) -> Ticker:
         pass
 
@@ -36,27 +36,25 @@ class TickerConverter(Converter):
 
     def format_from_bybit(self, raw_data: Any) -> Ticker:
         pass
-    
+
     def format_from_gmocoinfx(self, raw_data: Any) -> Ticker:
 
         ticker_detail = {}
         try:
-            for d in raw_data['data']:
-                symbol = d['symbol']
-                ask = d['ask']
-                bid = d['bid']
+            for d in raw_data["data"]:
+                symbol = d["symbol"]
+                ask = d["ask"]
+                bid = d["bid"]
 
-                ticker_detail[symbol] = {
-                    'ask': ask,
-                    'bid': bid
-                }
+                ticker_detail[symbol] = {"ask": ask, "bid": bid}
         except KeyError:
             return None
 
         return Ticker(ticker_detail=ticker_detail)
-    
+
     def format_from_db(self, raw_data: Any) -> Ticker:
-        pass
+
+        return Ticker(ticker_detail=raw_data)
 
     @property
     def get_data_type(self) -> str:

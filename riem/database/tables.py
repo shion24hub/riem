@@ -126,9 +126,52 @@ class OrderTable(Base):
         )
 
         return "OrderTable({})".format(attrs)
-    
+
     @property
     def for_fmt(self) -> dict[str, Any]:
-        return {
-            "order_id": self.order_id
-        }
+        return {"order_id": self.order_id}
+
+
+# Ticker
+
+
+class TickerTable(Base):
+    __tablename__ = "ticker"
+
+    id = Column(Integer, primary_key=True)
+    created_on = Column(DateTime(), default=datetime.now)
+
+    modelhash = Column(String)
+    exchange_name = Column(String)
+    ticker = relationship("TickerDetailTable", backref="ticker")
+
+    def __repr__(self) -> str:
+        attrs = "modelhash={}, exchange_name={}, ticker={}".format(
+            self.modelhash, self.exchange_name, self.ticker
+        )
+
+        return "TickerTable({})".format(attrs)
+
+    @property
+    def for_fmt(self) -> dict[str, Any]:
+
+        ret = {}
+        for t in self.ticker:
+            ret[t.symbol] = {"ask": t.ask, "bid": t.bid}
+
+        return ret
+
+
+class TickerDetailTable(Base):
+    __tablename__ = "ticker_detail"
+
+    id = Column(Integer, primary_key=True)
+    ticker_id = Column(Integer, ForeignKey("ticker.id"))
+    symbol = Column(String)
+    ask = Column(String)
+    bid = Column(String)
+
+    def __repr__(self) -> str:
+        return "TickerDetailTable(symbol={}, ask={}, bid={})".format(
+            self.symbol, self.ask, self.bid
+        )
