@@ -206,3 +206,10 @@ class ClientResponseProxy:
             new_resps.append(f(resp, arguments))
 
         return ClientResponseProxy(responses=new_resps)
+    
+    def first(self) -> ClientResponse:
+        return self.responses[0]
+    
+    def last(self) -> ClientResponse:
+        return self.responses[-1]
+
